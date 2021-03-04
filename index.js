@@ -33,7 +33,9 @@ class Game {
       console.log('restart click');
     });
     toggle.addEventListener('click', () => {
-      console.log('toggle click');
+      this.gameType =
+        this.gameType === GAME_TYPE.CANVAS ? GAME_TYPE.DOM : GAME_TYPE.CANVAS;
+      this.render();
     });
     this.gobangData = new Array(this.chessSize)
       .fill(PIECES.DEFAULT)
@@ -74,15 +76,51 @@ class Game {
       frag.appendChild(row);
     });
     console.log(this.board, 'this.board');
+    this.board.innerHTML = '';
     this.board.appendChild(frag);
   }
-  renderCanvas() {}
+  renderCanvas() {
+    const boardWidth = this.board.clientWidth;
+    const piecesWidth = parseInt(boardWidth / this.chessSize);
+    const circleWidth = parseInt(boardWidth / this.chessSize / 1.2);
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('width', `${boardWidth}px`);
+    canvas.setAttribute('height', `${boardWidth}px`);
+    const context = canvas.getContext('2d');
+
+    this.gobangData.forEach((v, i) => {
+      v.forEach((w, j) => {
+        // 画每一个小矩形
+        context.moveTo(piecesWidth * i, piecesWidth * j);
+        context.lineTo(piecesWidth * (i + 1), piecesWidth * j);
+        context.lineTo(piecesWidth * (i + 1), piecesWidth * (j + 1));
+        context.lineTo(piecesWidth * i, piecesWidth * (j + 1));
+        context.lineTo(piecesWidth * i, piecesWidth * j);
+        context.stroke();
+
+        // context.beginPath();
+        // context.arc(
+        //   piecesWidth * i,
+        //   piecesWidth * j,
+        //   circleWidth / 2,
+        //   0,
+        //   2 * Math.PI,
+        //   true
+        // );
+        // context.fillStyle = 'black';
+        // context.fill();
+        // context.closePath();
+      });
+    });
+    this.board.innerHTML = '';
+    this.board.appendChild(canvas);
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   const game = new Game(
     {
-      gameType: GAME_TYPE.DOM,
+      gameType: GAME_TYPE.CANVAS,
       chessSize: DEFAULT_CHESS_SIZE
     },
     document.getElementById('board')
