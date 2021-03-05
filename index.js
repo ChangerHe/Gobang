@@ -13,10 +13,7 @@ const PIECES = {
 };
 
 class Game {
-  constructor(
-    { renderType = RENDER_TYPE.DOM, chessSize = DEFAULT_CHESS_SIZE },
-    board
-  ) {
+  constructor({ renderType, chessSize }, board) {
     // 回合制, 白棋先行, 因为会有第一次的render, 所以默认值设置为黑棋回合
     this.round = PIECES.BLACK;
     // 游戏渲染类型: CANVAS or DOM
@@ -273,6 +270,7 @@ class Game {
         context.closePath();
         // 处理边界值情况
         if (i === 0 || j === 0) return;
+        // 画圆形
         context.beginPath();
         context.arc(
           piecesWidth * j,
