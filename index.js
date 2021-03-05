@@ -22,7 +22,7 @@ class Game {
     // 挂载的游戏的面板
     this.board = board;
     // 面板的宽度
-    this.boardWidth = board.clientWidth
+    this.boardWidth = board.clientWidth;
     // 单个格子的宽度
     this.piecesWidth = parseInt(this.boardWidth / chessSize);
     // 棋子的宽度
@@ -58,11 +58,28 @@ class Game {
         const boardPos = [this.board.offsetLeft, this.board.offsetTop];
         const clickedPos = [e.clientX, e.clientY];
         // STEP1: 使用点击位置与boardPos之间的偏振值, 计算出点击的格子是哪一个
-        const chess = [~~((clickedPos[0] - boardPos[0] + this.piecesWidth/2) / this.piecesWidth), ~~((clickedPos[1] - boardPos[1] + this.piecesWidth/2) / this.piecesWidth)]
-        console.log(chess, 'chess', boardPos, clickedPos, this.gobangData, clickedPos[0] - boardPos[0], clickedPos[1] - boardPos[1])
+        const chess = [
+          ~~(
+            (clickedPos[0] - boardPos[0] + this.piecesWidth / 2) /
+            this.piecesWidth
+          ),
+          ~~(
+            (clickedPos[1] - boardPos[1] + this.piecesWidth / 2) /
+            this.piecesWidth
+          ),
+        ];
+        console.log(
+          chess,
+          "chess",
+          boardPos,
+          clickedPos,
+          this.gobangData,
+          clickedPos[0] - boardPos[0],
+          clickedPos[1] - boardPos[1]
+        );
         // STEP2: 将对应格子的棋子修改成对应颜色
         if (this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT) {
-          this.gobangData[chess[1]][chess[0]] = this.getRound()
+          this.gobangData[chess[1]][chess[0]] = this.getRound();
           this.render();
         }
         // STEP3: 渲染页面
@@ -70,7 +87,9 @@ class Game {
       },
       toggleClick: () => {
         this.renderType =
-          this.renderType === RENDER_TYPE.CANVAS ? RENDER_TYPE.DOM : RENDER_TYPE.CANVAS;
+          this.renderType === RENDER_TYPE.CANVAS
+            ? RENDER_TYPE.DOM
+            : RENDER_TYPE.CANVAS;
         this.render();
       },
     };
@@ -93,15 +112,17 @@ class Game {
     this.render();
   }
   getRound() {
-    this.round = this.round === PIECES.WHITE ? PIECES.BLACK : PIECES.WHITE
-    return this.round
+    this.round = this.round === PIECES.WHITE ? PIECES.BLACK : PIECES.WHITE;
+    return this.round;
   }
   render() {
-    this.renderType === RENDER_TYPE.DOM ? this.renderDOM() : this.renderCanvas();
-    round.innerHTML = this.round === PIECES.BLACK ? '白棋回合' : '黑棋回合'
+    this.renderType === RENDER_TYPE.DOM
+      ? this.renderDOM()
+      : this.renderCanvas();
+    round.innerHTML = this.round === PIECES.BLACK ? "白棋回合" : "黑棋回合";
   }
   renderDOM() {
-    const {boardWidth, piecesWidth, circleWidth} = this;
+    const { boardWidth, piecesWidth, circleWidth } = this;
     console.log(boardWidth, "boardWidth");
     const frag = document.createDocumentFragment();
     this.gobangData.forEach((v, i) => {
@@ -124,7 +145,6 @@ class Game {
             "style",
             `width:${circleWidth}px;height:${circleWidth}px;`
           );
-
         }
         cell.appendChild(circle);
         row.appendChild(cell);
@@ -136,7 +156,7 @@ class Game {
     this.board.appendChild(frag);
   }
   renderCanvas() {
-    const {boardWidth, piecesWidth, circleWidth} = this;
+    const { boardWidth, piecesWidth, circleWidth } = this;
     const canvas = document.createElement("canvas");
     canvas.setAttribute("width", `${boardWidth}px`);
     canvas.setAttribute("height", `${boardWidth}px`);
