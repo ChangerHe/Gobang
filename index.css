@@ -10,8 +10,8 @@ h1 {
   text-align: center;
 }
 #board {
-  width: 400px;
-  height: 400px;
+  width: 600px;
+  height: 600px;
   margin: 40px auto;
   /* background-color: red; */
 }

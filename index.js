@@ -1,9 +1,11 @@
+// 渲染形态: dom 或者 canvas可选
 const RENDER_TYPE = {
   DOM: "dom",
   CANVAS: "canvas",
 };
 // 默认的棋盘格子数量 建议设置为可被400整除的数
-const DEFAULT_CHESS_SIZE = 10;
+const DEFAULT_CHESS_SIZE = 15;
+// 棋子: 白 黑 和默认的占位
 const PIECES = {
   DEFAULT: "default",
   WHITE: "white",
@@ -15,7 +17,7 @@ class Game {
     { renderType = RENDER_TYPE.DOM, chessSize = DEFAULT_CHESS_SIZE },
     board
   ) {
-    // 回合制, 白棋先行
+    // 回合制, 白棋先行, 因为会有第一次的render, 所以默认值设置为黑棋回合
     this.round = PIECES.BLACK;
     // 游戏渲染类型: CANVAS or DOM
     this.renderType = renderType;
@@ -35,7 +37,7 @@ class Game {
     this.handleQueuePoint = -1;
     // 棋盘数据
     this.gobangData = [];
-
+    // 事件处理函数
     this.eventHandler = {
       redo: () => {
         if (this.handleQueue.length && this.handleQueuePoint > -1) {
@@ -82,11 +84,12 @@ class Game {
             this.piecesWidth
           ),
         ];
-        // STEP2: 将对应格子的棋子修改成对应颜色
+        // 如果点击的地方有子了, 就不进行任何操作
         if (
           this.gobangData[chess[1]] &&
           this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT
         ) {
+          // STEP2: 将对应格子的棋子修改成对应颜色, 切换回合, 更新队列和指针, 渲染内容
           const currentRound = this.getRound();
           this.gobangData[chess[1]][chess[0]] = currentRound;
           // 如果有操作指针, 这个时候需要将指针之后的历史清除掉
@@ -98,10 +101,18 @@ class Game {
             handler: currentRound,
           });
           this.handleQueuePoint += 1;
+
+          // STEP3: 渲染页面
           this.render();
+          // STEP4: 获胜判断
+          // 保证DOM更新成功, 所以这里加了一个timeout
+          setTimeout(() => {
+            if (this.checkIfWin()) {
+              alert(`${this.round} win!!!`);
+              this.resetData();
+            }
+          }, 0);
         }
-        // STEP3: 渲染页面
-        // STEP4: 获胜判断
       },
       toggleClick: () => {
         this.renderType =
@@ -129,9 +140,80 @@ class Game {
     this.handleQueuePoint = -1;
     this.render();
   }
+  // 获取回合
   getRound() {
     this.round = this.round === PIECES.WHITE ? PIECES.BLACK : PIECES.WHITE;
     return this.round;
+  }
+  checkIfWin() {
+    const handleLen = this.handleQueue.length;
+    // 小于9次操作就不用判断了, 此时黑白各四个
+    if (handleLen < 9) return false;
+    const currentHandle = this.handleQueue[this.handleQueue.length - 1];
+    // 其实求胜的问题本质上是求连续该色棋子数量是否大于4的问题
+    // 问题类似于: LeetCode 53题, 但比LC的该题更简单, 可以使用贪心算法的思路求解
+    // 横向要判断的数组
+    let max = 0;
+    for (let i = currentHandle.pos[0] - 4; i <= currentHandle.pos[0] + 4; i++) {
+      if (
+        this.gobangData[currentHandle.pos[1]] &&
+        this.gobangData[currentHandle.pos[1]][i] === currentHandle.handler
+      ) {
+        max++;
+        if (max > 4) {
+          return true;
+        }
+      } else {
+        max = 0;
+      }
+    }
+    // 竖向要判断的数组
+    max = 0;
+    for (let i = currentHandle.pos[1] - 4; i <= currentHandle.pos[1] + 4; i++) {
+      if (
+        this.gobangData[i] &&
+        this.gobangData[i][currentHandle.pos[0]] === currentHandle.handler
+      ) {
+        max++;
+        if (max > 4) {
+          return true;
+        }
+      } else {
+        max = 0;
+      }
+    }
+    // 左斜向要判断的数组
+    max = 0;
+    for (let i = -4; i <= 4; i++) {
+      if (
+        this.gobangData[currentHandle.pos[1] - i] &&
+        this.gobangData[currentHandle.pos[1] - i][currentHandle.pos[0] - i] ===
+          currentHandle.handler
+      ) {
+        max++;
+        if (max > 4) {
+          return true;
+        }
+      } else {
+        max = 0;
+      }
+    }
+    // 右斜向要判断的数组
+    max = 0;
+    for (let i = -4; i <= 4; i++) {
+      if (
+        this.gobangData[currentHandle.pos[1] - i] &&
+        this.gobangData[currentHandle.pos[1] - i][currentHandle.pos[0] + i] ===
+          currentHandle.handler
+      ) {
+        max++;
+        if (max > 4) {
+          return true;
+        }
+      } else {
+        max = 0;
+      }
+    }
   }
   render() {
     this.renderType === RENDER_TYPE.DOM
