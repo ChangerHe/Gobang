@@ -13,6 +13,7 @@ h1 {
   width: 600px;
   height: 600px;
   margin: 40px auto;
+  border: 1px solid #000;
 }
 
 @media (max-width: 600px) {

@@ -3,7 +3,7 @@ const RENDER_TYPE = {
   DOM: "dom",
   CANVAS: "canvas",
 };
-// 默认的棋盘格子数量 建议设置为可被400整除的数
+// 默认的棋盘格子数量 建议设置为可被600整除的数
 const DEFAULT_CHESS_SIZE = 15;
 // 棋子: 白 黑 和默认的占位
 const PIECES = {
@@ -23,10 +23,10 @@ class Game {
     // 面板的宽度
     this.boardWidth = board.clientWidth;
     // 单个格子的宽度
-    this.piecesWidth = parseInt(this.boardWidth / chessSize);
+    this.piecesWidth = parseInt(this.boardWidth / chessSize, 10);
     // 棋子的宽度
-    this.circleWidth = parseInt(this.boardWidth / chessSize / 1.2);
-    // 棋盘各自数量
+    this.chessWidth = parseInt(this.boardWidth / chessSize / 1.2, 10);
+    // 棋盘格子数量
     this.chessSize = chessSize;
     // 操作队列
     this.handleQueue = [];
@@ -38,11 +38,13 @@ class Game {
     this.eventHandler = {
       redo: () => {
         if (this.handleQueue.length && this.handleQueuePoint > -1) {
-          this.handleQueuePoint = this.handleQueuePoint - 1;
+          // 回退一步, 然后将回退的那一步的落子位置空
+          this.handleQueuePoint -= 1;
           const lastHandlePos = this.handleQueue[this.handleQueuePoint + 1];
-          const currentRound = this.getRound();
           this.gobangData[lastHandlePos.pos[1]][lastHandlePos.pos[0]] =
             PIECES.DEFAULT;
+          // 换手
+          this.toggleRound();
           this.render();
         }
       },
@@ -87,7 +89,7 @@ class Game {
           this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT
         ) {
           // STEP2: 将对应格子的棋子修改成对应颜色, 切换回合, 更新队列和指针, 渲染内容
-          const currentRound = this.getRound();
+          const currentRound = this.toggleRound();
           this.gobangData[chess[1]][chess[0]] = currentRound;
           // 如果有操作指针, 这个时候需要将指针之后的历史清除掉
           if (this.handleQueuePoint < this.handleQueue.length - 1) {
@@ -125,20 +127,20 @@ class Game {
     redo.addEventListener("click", this.eventHandler.redo);
     undo.addEventListener("click", this.eventHandler.undo);
     restart.addEventListener("click", this.eventHandler.restart);
-    document.addEventListener("click", this.eventHandler.contentClick);
     toggle.addEventListener("click", this.eventHandler.toggleClick);
+    document.addEventListener("click", this.eventHandler.contentClick);
     this.resetData();
   }
   resetData() {
     this.gobangData = new Array(this.chessSize)
-      .fill(PIECES.DEFAULT)
-      .map((v) => new Array(this.chessSize).fill(PIECES.DEFAULT));
+      .fill([])
+      .map(() => new Array(this.chessSize).fill(PIECES.DEFAULT));
     this.handleQueue = [];
     this.handleQueuePoint = -1;
     this.render();
   }
   // 获取回合
-  getRound() {
+  toggleRound() {
     this.round = this.round === PIECES.WHITE ? PIECES.BLACK : PIECES.WHITE;
     return this.round;
   }
@@ -156,8 +158,7 @@ class Game {
         this.gobangData[currentHandle.pos[1]] &&
         this.gobangData[currentHandle.pos[1]][i] === currentHandle.handler
       ) {
-        max++;
-        if (max > 4) {
+        if (++max > 4) {
           return true;
         }
       } else {
@@ -171,8 +172,7 @@ class Game {
         this.gobangData[i] &&
         this.gobangData[i][currentHandle.pos[0]] === currentHandle.handler
       ) {
-        max++;
-        if (max > 4) {
+        if (++max > 4) {
           return true;
         }
       } else {
@@ -187,8 +187,7 @@ class Game {
         this.gobangData[currentHandle.pos[1] - i][currentHandle.pos[0] - i] ===
           currentHandle.handler
       ) {
-        max++;
-        if (max > 4) {
+        if (++max > 4) {
           return true;
         }
       } else {
@@ -203,8 +202,7 @@ class Game {
         this.gobangData[currentHandle.pos[1] - i][currentHandle.pos[0] + i] ===
           currentHandle.handler
       ) {
-        max++;
-        if (max > 4) {
+        if (++max > 4) {
           return true;
         }
       } else {
@@ -219,7 +217,7 @@ class Game {
     round.innerHTML = this.round === PIECES.BLACK ? "白棋回合" : "黑棋回合";
   }
   renderDOM() {
-    const { boardWidth, piecesWidth, circleWidth } = this;
+    const { piecesWidth, chessWidth } = this;
     const frag = document.createDocumentFragment();
     this.gobangData.forEach((v, i) => {
       const row = document.createElement("div");
@@ -234,12 +232,12 @@ class Game {
           `width:${piecesWidth}px;height:${piecesWidth}px;`
         );
 
-        // 处理边界值情况
+        // 处理边界值情况, 边缘不可落子
         if (i != 0 && j != 0) {
           circle.classList.add("circle", w);
           circle.setAttribute(
             "style",
-            `width:${circleWidth}px;height:${circleWidth}px;`
+            `width:${chessWidth}px;height:${chessWidth}px;`
           );
         }
         cell.appendChild(circle);
@@ -251,21 +249,30 @@ class Game {
     this.board.appendChild(frag);
   }
   renderCanvas() {
-    const { boardWidth, piecesWidth, circleWidth } = this;
+    const ratio = window.devicePixelRatio;
+    const { boardWidth, piecesWidth, chessWidth } = this;
+    const hdBoardWidth = boardWidth * ratio;
+    const hdPiecesWidth = piecesWidth * ratio;
+    const hdChessWidth = chessWidth * ratio;
     const canvas = document.createElement("canvas");
-    canvas.setAttribute("width", `${boardWidth}px`);
-    canvas.setAttribute("height", `${boardWidth}px`);
+    canvas.setAttribute("width", hdBoardWidth);
+    canvas.setAttribute("height", hdBoardWidth);
+    canvas.setAttribute(
+      "style",
+      `width: ${boardWidth}px;height: ${boardWidth}px`
+    );
     const context = canvas.getContext("2d");
 
     this.gobangData.forEach((v, i) => {
       v.forEach((w, j) => {
         // 画每一个小矩形
         context.beginPath();
-        context.moveTo(piecesWidth * j, piecesWidth * i);
-        context.lineTo(piecesWidth * (j + 1), piecesWidth * i);
-        context.lineTo(piecesWidth * (j + 1), piecesWidth * (i + 1));
-        context.lineTo(piecesWidth * j, piecesWidth * (i + 1));
-        context.lineTo(piecesWidth * j, piecesWidth * i);
+        context.moveTo(hdPiecesWidth * j, hdPiecesWidth * i);
+        context.lineTo(hdPiecesWidth * (j + 1), hdPiecesWidth * i);
+        context.lineTo(hdPiecesWidth * (j + 1), hdPiecesWidth * (i + 1));
+        context.lineTo(hdPiecesWidth * j, hdPiecesWidth * (i + 1));
+        context.lineTo(hdPiecesWidth * j, hdPiecesWidth * i);
+        context.lineWidth = ratio * 2;
         context.stroke();
         context.closePath();
         // 处理边界值情况
@@ -273,19 +280,19 @@ class Game {
         // 画圆形
         context.beginPath();
         context.arc(
-          piecesWidth * j,
-          piecesWidth * i,
-          circleWidth / 2,
+          hdPiecesWidth * j,
+          hdPiecesWidth * i,
+          hdChessWidth / 2,
           0,
           2 * Math.PI,
           false
         );
         const gradient = context.createRadialGradient(
-          piecesWidth * j,
-          piecesWidth * i,
-          circleWidth / 2,
-          piecesWidth * j,
-          piecesWidth * i,
+          hdPiecesWidth * j,
+          hdPiecesWidth * i,
+          hdChessWidth / 2,
+          hdPiecesWidth * j,
+          hdPiecesWidth * i,
           0
         );
         if (w === PIECES.BLACK) {
