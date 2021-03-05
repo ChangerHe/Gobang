@@ -80,7 +80,7 @@ class Game {
           clickedPos[1] - boardPos[1]
         );
         // STEP2: 将对应格子的棋子修改成对应颜色
-        if (this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT) {
+        if (this.gobangData[chess[1]] && this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT) {
           this.gobangData[chess[1]][chess[0]] = this.getRound();
           this.render();
         }
