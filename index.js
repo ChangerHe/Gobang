@@ -38,13 +38,30 @@ class Game {
 
     this.eventHandler = {
       redo: () => {
-        console.log("redo click");
+        if (this.handleQueue.length) {
+          // 如果当前指针为-1, 存在两种情况, 一是从来没有做过撤销操作, 二是进行过撤销操作, 但是页面上没棋子了
+          // 从未做过撤销操作的, 需要把指针定位到相应位置, 这里主要是节约了多次操作指针的成本
+          this.handleQueuePoint =
+            this.handleQueuePoint === -1
+              ? this.handleQueue.length - 2
+              : this.handleQueuePoint - 1;
+          const lastHandlePos = this.handleQueue[this.handleQueuePoint + 1];
+          const currentRound = this.getRound();
+          this.gobangData[lastHandlePos.pos[1]][lastHandlePos.pos[0]] =
+            PIECES.DEFAULT;
+          this.render();
+        }
       },
       undo: () => {
-        console.log("undo click");
+        if (this.handleQueuePoint < this.handleQueue.length - 1) {
+          this.handleQueuePoint += 1;
+          const undoHandle = this.handleQueue[this.handleQueuePoint];
+          this.gobangData[undoHandle.pos[1]][undoHandle.pos[0]] =
+            undoHandle.handler;
+          this.render();
+        }
       },
       restart: () => {
-        console.log("restart click");
         this.resetData();
       },
       contentClick: (e) => {
@@ -70,18 +87,21 @@ class Game {
             this.piecesWidth
           ),
         ];
-        console.log(
-          chess,
-          "chess",
-          boardPos,
-          clickedPos,
-          this.gobangData,
-          clickedPos[0] - boardPos[0],
-          clickedPos[1] - boardPos[1]
-        );
         // STEP2: 将对应格子的棋子修改成对应颜色
-        if (this.gobangData[chess[1]] && this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT) {
-          this.gobangData[chess[1]][chess[0]] = this.getRound();
+        if (
+          this.gobangData[chess[1]] &&
+          this.gobangData[chess[1]][chess[0]] === PIECES.DEFAULT
+        ) {
+          const currentRound = this.getRound();
+          this.gobangData[chess[1]][chess[0]] = currentRound;
+          // 如果有操作指针, 这个时候需要将指针之后的历史清除掉
+          if (this.handleQueuePoint > -1) {
+            this.handleQueue = this.handleQueue.slice(0, this.handleQueuePoint);
+          }
+          this.handleQueue.push({
+            pos: [chess[0], chess[1]],
+            handler: currentRound,
+          });
           this.render();
         }
         // STEP3: 渲染页面
@@ -125,7 +145,6 @@ class Game {
   }
   renderDOM() {
     const { boardWidth, piecesWidth, circleWidth } = this;
-    console.log(boardWidth, "boardWidth");
     const frag = document.createDocumentFragment();
     this.gobangData.forEach((v, i) => {
       const row = document.createElement("div");
@@ -153,7 +172,6 @@ class Game {
       });
       frag.appendChild(row);
     });
-    console.log(this.board, "this.board");
     this.board.innerHTML = "";
     this.board.appendChild(frag);
   }
