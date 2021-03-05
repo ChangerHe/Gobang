@@ -65,7 +65,7 @@ class Game {
         if (
           clickedPos[0] > boardPos[0] + this.boardWidth ||
           clickedPos[0] < boardPos[0] ||
-          clickedPos[1] > boardPos[0] + this.boardWidth ||
+          clickedPos[1] > boardPos[1] + this.boardWidth ||
           clickedPos[1] < boardPos[1]
         ) {
           return;
