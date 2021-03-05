@@ -10,8 +10,8 @@ h1 {
   text-align: center;
 }
 #board {
-  width: 50vh;
-  height: 50vh;
+  width: 400px;
+  height: 400px;
   margin: 40px auto;
   /* background-color: red; */
 }
@@ -38,13 +38,9 @@ h1 {
 }
 
 .white {
-  background: #fff;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 3px #ccc, 0 2px 2px #eee inset;
+  background: radial-gradient(closest-side, #f9f9f9, #d1d1d1);
 }
 
 .black {
-  background: #000;
-  border: 1px solid #000;
-  box-shadow: 0 0 3px #ccc, 0 2px 2px #222 inset;
+  background: radial-gradient(closest-side, white, black);
 }
