@@ -125,7 +125,7 @@ class Game {
     redo.addEventListener("click", this.eventHandler.redo);
     undo.addEventListener("click", this.eventHandler.undo);
     restart.addEventListener("click", this.eventHandler.restart);
-    window.addEventListener("click", this.eventHandler.contentClick);
+    document.addEventListener("click", this.eventHandler.contentClick);
     toggle.addEventListener("click", this.eventHandler.toggleClick);
     this.resetData();
   }
