@@ -48,15 +48,17 @@ class Game {
         this.resetData();
       },
       contentClick: (e) => {
-        console.log("content clicked", e.clientX, e.clientY);
-        console.log(
-          this.board,
-          "this.board",
-          this.board.offsetLeft,
-          this.board.offsetTop
-        );
         const boardPos = [this.board.offsetLeft, this.board.offsetTop];
         const clickedPos = [e.clientX, e.clientY];
+        // 边界判断, 如果没有点击到盘面上, 不触发任何操作
+        if (
+          clickedPos[0] > boardPos[0] + this.boardWidth ||
+          clickedPos[0] < boardPos[0] ||
+          clickedPos[1] > boardPos[0] + this.boardWidth ||
+          clickedPos[1] < boardPos[1]
+        ) {
+          return;
+        }
         // STEP1: 使用点击位置与boardPos之间的偏振值, 计算出点击的格子是哪一个
         const chess = [
           ~~(
